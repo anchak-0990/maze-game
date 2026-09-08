@@ -179,10 +179,6 @@
             line-height: 1.8;
         }
 
-        .danger {
-            color: #ff3333;
-        }
-
         @media (max-width: 600px) {
             h1 {
                 font-size: 32px;
@@ -209,10 +205,6 @@
 
 <div id="game">
 
-    <!-- =========================
-         ГОЛОВНЕ МЕНЮ
-    ========================== -->
-
     <div id="menu">
 
         <h1>🧩 MAZE</h1>
@@ -238,10 +230,6 @@
 
     </div>
 
-
-    <!-- =========================
-         ЕКРАН ГРИ
-    ========================== -->
 
     <div id="gameScreen">
 
@@ -288,6 +276,7 @@
 
 
         <div>
+
             <button id="restartButton">
                 🔄 RESTART
             </button>
@@ -299,12 +288,9 @@
             <button id="menuButton">
                 🏠 MENU
             </button>
+
         </div>
 
-
-        <!-- =========================
-             СЕНСОРНЕ КЕРУВАННЯ
-        ========================== -->
 
         <div id="controls">
 
@@ -344,10 +330,6 @@
 
     </div>
 
-
-    <!-- =========================
-         ЕКРАН ПЕРЕМОГИ
-    ========================== -->
 
     <div id="winScreen">
 
@@ -564,7 +546,7 @@
 
 
     /* =========================
-       РОЗМІР ЛАБІРИНТУ
+       РОЗМІР
     ========================== */
 
     function getMazeSize(level) {
@@ -606,7 +588,7 @@
 
 
     /* =========================
-       SEED RANDOM
+       ПСЕВДОВИПАДКОВІ ЧИСЛА
     ========================== */
 
     function createSeedRandom(seed) {
@@ -675,10 +657,10 @@
 
 
     /* =========================
-       ГЕНЕРАЦІЯ ЛАБІРИНТУ
+       БАЗОВИЙ ГЕНЕРАТОР
     ========================== */
 
-    function generateMaze(
+    function generateBaseMaze(
         size,
         seed
     ) {
@@ -836,709 +818,947 @@
         }
 
 
-        /*
-            Гарантуємо відкритий
-            нижній правий вихід.
-        */
-
-        const exitX =
-            size - 1;
-
-        const exitY =
-            size - 1;
-
-
-        grid[exitY][exitX] =
-            0;
-
-        grid[exitY][exitX - 1] =
-            0;
-
-        grid[exitY - 1][exitX] =
-            0;
-
-
         return grid;
     }
 
 
     /* =========================
-       CAMPAIGN SEED
+       ПІДСИЛЕННЯ СКЛАДНОСТІ
     ========================== */
 
-    function getCampaignSeed(level) {
+    function getDifficulty(level) {
 
-        return (
-            918273 +
-            level * 7919
-        );
+        if (level <= 3) {
+            return {
+                attempts: 3,
+                extraOpenings: 0,
+                targetMultiplier: 0.65
+            };
+        }
+
+        if (level <= 6) {
+            return {
+                attempts: 5,
+                extraOpenings: 1,
+                targetMultiplier: 0.85
+            };
+        }
+
+        if (level <= 10) {
+            return {
+                attempts: 7,
+                extraOpenings: 2,
+                targetMultiplier: 1.00
+            };
+        }
+
+        if (level <= 15) {
+            return {
+                attempts: 8,
+                extraOpenings: 3,
+                targetMultiplier: 1.15
+            };
+        }
+
+        if (level <= 20) {
+            return {
+                attempts: 9,
+                extraOpenings: 4,
+                targetMultiplier: 1.30
+            };
+        }
+
+        if (level <= 25) {
+            return {
+                attempts: 10,
+                extraOpenings: 5,
+                targetMultiplier: 1.45
+            };
+        }
+
+        if (level <= 30) {
+            return {
+                attempts: 10,
+                extraOpenings: 6,
+                targetMultiplier: 1.60
+            };
+        }
+
+        if (level <= 35) {
+            return {
+                attempts: 11,
+                extraOpenings: 7,
+                targetMultiplier: 1.75
+            };
+        }
+
+        return {
+            attempts: 12,
+            extraOpenings: 8,
+            targetMultiplier: 1.90
+        };
     }
 
 
     /* =========================
-       RANDOM SEED
+       ВИЗНАЧЕННЯ ДОВЖИНИ ШЛЯХУ
     ========================== */
 
-    function getRandomSeed() {
+    function findPathLength(
+        grid,
+        size
+    ) {
 
-        return Math.floor(
-            Math.random() *
-            2147483647
-        );
-    }
+        const distance = [];
 
-
-    /* =========================
-       CAMPAIGN
-    ========================== */
-
-    function startCampaign() {
-
-        currentMode =
-            "campaign";
-
-        currentLevel =
-            1;
-
-        startLevel();
-    }
-
-
-    /* =========================
-       RANDOM
-    ========================== */
-
-    function startRandom() {
-
-        currentMode =
-            "random";
-
-        currentLevel =
-            1;
-
-        startLevel();
-    }
-
-
-    /* =========================
-       ЗАПУСК РІВНЯ
-    ========================== */
-
-    function startLevel() {
-
-        clearInterval(timer);
-
-        gamePaused =
-            false;
-
-        gameActive =
-            true;
-
-        moves =
-            0;
-
-        seconds =
-            0;
-
-
-        mazeSize =
-            getMazeSize(
-                currentLevel
-            );
-
-
-        if (
-            currentMode === "campaign"
+        for (
+            let y = 0;
+            y < size;
+            y++
         ) {
 
-            currentSeed =
-                getCampaignSeed(
-                    currentLevel
-                );
-
-        } else {
-
-            currentSeed =
-                getRandomSeed();
+            distance[y] =
+                new Array(size).fill(-1);
         }
 
 
-        maze =
-            generateMaze(
-                mazeSize,
-                currentSeed
+        const queue = [];
+
+        queue.push({
+            x: 0,
+            y: 0
+        });
+
+        distance[0][0] = 0;
+
+
+        let index = 0;
+
+
+        while (
+            index < queue.length
+        ) {
+
+            const current =
+                queue[index++];
+
+            const directions = [
+
+                {
+                    dx: 1,
+                    dy: 0
+                },
+
+                {
+                    dx: -1,
+                    dy: 0
+                },
+
+                {
+                    dx: 0,
+                    dy: 1
+                },
+
+                {
+                    dx: 0,
+                    dy: -1
+                }
+
+            ];
+
+
+            for (
+                let i = 0;
+                i < directions.length;
+                i++
+            ) {
+
+                const nx =
+                    current.x +
+                    directions[i].dx;
+
+                const ny =
+                    current.y +
+                    directions[i].dy;
+
+
+                if (nx < 0) {
+                    continue;
+                }
+
+                if (nx >= size) {
+                    continue;
+                }
+
+                if (ny < 0) {
+                    continue;
+                }
+
+                if (ny >= size) {
+                    continue;
+                }
+
+                if (
+                    grid[ny][nx] === 1
+                ) {
+                    continue;
+                }
+
+                if (
+                    distance[ny][nx] !== -1
+                ) {
+                    continue;
+                }
+
+
+                distance[ny][nx] =
+                    distance[current.y][current.x] + 1;
+
+
+                queue.push({
+                    x: nx,
+                    y: ny
+                });
+            }
+        }
+
+
+        return distance[size - 1][size - 1];
+    }
+
+
+    /* =========================
+       КІЛЬКІСТЬ ТУПИКІВ
+    ========================== */
+
+    function countDeadEnds(
+        grid,
+        size
+    ) {
+
+        let count = 0;
+
+
+        for (
+            let y = 1;
+            y < size - 1;
+            y++
+        ) {
+
+            for (
+                let x = 1;
+                x < size - 1;
+                x++
+            ) {
+
+                if (
+                    grid[y][x] === 1
+                ) {
+                    continue;
+                }
+
+
+                let exits = 0;
+
+
+                if (
+                    grid[y - 1][x] === 0
+                ) {
+                    exits++;
+                }
+
+                if (
+                    grid[y + 1][x] === 0
+                ) {
+                    exits++;
+                }
+
+                if (
+                    grid[y][x - 1] === 0
+                ) {
+                    exits++;
+                }
+
+                if (
+                    grid[y][x + 1] === 0
+                ) {
+                    exits++;
+                }
+
+
+                if (
+                    exits === 1
+                ) {
+                    count++;
+                }
+            }
+        }
+
+
+        return count;
+    }
+    
+    function addDifficultyFeatures(grid, size, level, random) {
+        const difficulty = getDifficulty(level);
+
+        /*
+         * Додаємо додаткові проходи не хаотично.
+         * Намагаємося створювати бічні маршрути та петлі,
+         * але не руйнувати основний шлях до виходу.
+         */
+        let added = 0;
+        let safety = 0;
+
+        while (added < difficulty.extraOpenings && safety < 500) {
+            safety++;
+
+            const x = 1 + Math.floor(random() * (size - 2));
+            const y = 1 + Math.floor(random() * (size - 2));
+
+            if (grid[y][x] !== 0) continue;
+
+            const neighbors = [];
+
+            if (x > 0) neighbors.push({ x: x - 1, y });
+            if (x < size - 1) neighbors.push({ x: x + 1, y });
+            if (y > 0) neighbors.push({ x, y: y - 1 });
+            if (y < size - 1) neighbors.push({ x, y: y + 1 });
+
+            const openNeighbors = neighbors.filter(
+                cell => grid[cell.y][cell.x] === 0
             );
 
+            if (openNeighbors.length === 1) {
+                grid[y][x] = 0;
+                added++;
+            }
+        }
+    }
+
+
+    function scoreMaze(grid, size, level) {
+        const difficulty = getDifficulty(level);
+
+        const pathLength = findPathLength(grid, size);
+        const deadEnds = countDeadEnds(grid, size);
+
+        if (pathLength <= 0) return -Infinity;
+
+        const straightLine = (size - 1) * 2;
+
+        const targetPath =
+            straightLine * difficulty.targetMultiplier +
+            (size * size * 0.35);
+
+        const pathDifference = Math.abs(pathLength - targetPath);
+
+        /*
+         * Чим довший правильний маршрут і чим більше
+         * тупиків — тим складнішим вважаємо лабіринт.
+         */
+        const pathScore = Math.max(
+            0,
+            1000 - pathDifference * 15
+        );
+
+        const deadEndTarget =
+            Math.max(2, Math.floor(size * (0.35 + level * 0.015)));
+
+        const deadEndDifference =
+            Math.abs(deadEnds - deadEndTarget);
+
+        const deadEndScore =
+            Math.max(0, 500 - deadEndDifference * 25);
+
+        return pathScore + deadEndScore + pathLength * 3;
+    }
+
+
+    function generateMaze(size, level, seed) {
+        const difficulty = getDifficulty(level);
+
+        let bestMaze = null;
+        let bestScore = -Infinity;
+
+        /*
+         * Створюємо декілька кандидатів.
+         * Потім беремо той, який найбільше відповідає
+         * складності поточного рівня.
+         */
+        for (let attempt = 0; attempt < difficulty.attempts; attempt++) {
+            const candidateSeed =
+                seed + attempt * 7919 + level * 104729;
+
+            const random = createSeedRandom(candidateSeed);
+
+            const grid = generateBaseMaze(size, candidateSeed);
+
+            addDifficultyFeatures(
+                grid,
+                size,
+                level,
+                random
+            );
+
+            const score = scoreMaze(
+                grid,
+                size,
+                level
+            );
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMaze = grid;
+            }
+        }
+
+        return bestMaze;
+    }
+
+
+    function startGame(level, mode) {
+        currentLevel = level;
+        currentMode = mode;
+
+        moves = 0;
+        seconds = 0;
+        gamePaused = false;
+        gameActive = true;
+
+        clearInterval(timer);
+
+        /*
+         * CAMPAIGN:
+         * кожен рівень має стабільний seed.
+         * Тобто при повторному проходженні
+         * рівень залишається тим самим.
+         *
+         * RANDOM:
+         * кожен запуск отримує новий seed.
+         */
+        if (mode === "campaign") {
+            currentSeed = 1000 + level * 99991;
+        } else {
+            currentSeed =
+                Date.now() +
+                Math.floor(Math.random() * 1000000);
+        }
+
+        const size = getMazeSize(level);
+
+        maze = generateMaze(
+            size,
+            level,
+            currentSeed
+        );
 
         player = {
             x: 0,
             y: 0
         };
 
-
         exit = {
-            x: mazeSize - 1,
-            y: mazeSize - 1
+            x: size - 1,
+            y: size - 1
         };
 
+        menuScreen.classList.add("hidden");
+        winScreen.classList.add("hidden");
+        gameScreen.classList.remove("hidden");
 
-        if (
+        levelText.textContent =
+            `LEVEL ${currentLevel}`;
+
+        modeText.textContent =
             currentMode === "campaign"
-        ) {
+                ? "CAMPAIGN"
+                : "RANDOM";
 
-            modeText.innerText =
-                "CAMPAIGN";
+        movesText.textContent = "MOVES: 0";
+        timerText.textContent = "TIME: 0";
 
-        } else {
-
-            modeText.innerText =
-                "RANDOM";
-        }
-
-
-        levelText.innerText =
-            currentLevel;
-
-        sizeText.innerText =
-            mazeSize +
-            "x" +
-            mazeSize;
-
-        movesText.innerText =
-            moves;
-
-        timeText.innerText =
-            seconds;
-
-        message.innerText =
-            "Дійди до червоної точки!";
-
-        pauseButton.innerText =
-            "⏸️ PAUSE";
-
-
-        menu.style.display =
-            "none";
-
-        winScreen.style.display =
-            "none";
-
-        gameScreen.style.display =
-            "block";
-
-
+        resizeCanvas();
         drawMaze();
 
+        timer = setInterval(() => {
+            if (!gamePaused && gameActive) {
+                seconds++;
 
-        timer =
-            setInterval(
-                function () {
-
-                    if (!gameActive) {
-                        return;
-                    }
-
-                    if (gamePaused) {
-                        return;
-                    }
-
-                    seconds++;
-
-                    timeText.innerText =
-                        seconds;
-
-                },
-                1000
-            );
+                timerText.textContent =
+                    `TIME: ${seconds}`;
+            }
+        }, 1000);
     }
 
 
-    /* =========================
-       МАЛЮВАННЯ
-    ========================== */
+    function resizeCanvas() {
+        const size = maze.length;
+
+        const maxWidth =
+            Math.min(
+                window.innerWidth - 30,
+                720
+            );
+
+        const maxHeight =
+            Math.min(
+                window.innerHeight - 210,
+                720
+            );
+
+        const canvasSize =
+            Math.max(
+                260,
+                Math.min(
+                    maxWidth,
+                    maxHeight
+                )
+            );
+
+        canvas.width = canvasSize;
+        canvas.height = canvasSize;
+    }
+
 
     function drawMaze() {
+        if (!maze || !maze.length) return;
 
-        mazeContainer.innerHTML =
-            "";
+        const size = maze.length;
+        const cellSize = canvas.width / size;
 
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
 
-        mazeContainer.style.gridTemplateColumns =
-            "repeat(" +
-            mazeSize +
-            ", 1fr)";
+        /*
+         * Фон
+         */
+        ctx.fillStyle = "#000";
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
 
+        /*
+         * Стіни
+         */
+        ctx.strokeStyle = "#00ff41";
+        ctx.lineWidth =
+            Math.max(1, cellSize * 0.08);
 
-        mazeContainer.style.gridTemplateRows =
-            "repeat(" +
-            mazeSize +
-            ", 1fr)";
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = "#00ff41";
 
-
-        for (
-            let y = 0;
-            y < mazeSize;
-            y++
-        ) {
-
-            for (
-                let x = 0;
-                x < mazeSize;
-                x++
-            ) {
-
-                const cell =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                cell.className =
-                    "cell";
-
-
-                if (
-                    maze[y][x] === 1
-                          ) {
-
-                    cell.classList.add(
-                        "wall"
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                if (maze[y][x] === 1) {
+                    ctx.strokeRect(
+                        x * cellSize,
+                        y * cellSize,
+                        cellSize,
+                        cellSize
                     );
                 }
-
-
-                if (
-                    x === exit.x &&
-                    y === exit.y
-                ) {
-
-                    cell.classList.add(
-                        "exit"
-                    );
-                }
-
-
-                if (
-                    x === player.x &&
-                    y === player.y
-                ) {
-
-                    cell.classList.add(
-                        "player"
-                    );
-                }
-
-
-                mazeContainer.appendChild(
-                    cell
-                );
             }
         }
+
+        ctx.shadowBlur = 0;
+
+        /*
+         * Вихід
+         */
+        const exitPadding =
+            cellSize * 0.22;
+
+        ctx.fillStyle = "#ff1744";
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = "#ff1744";
+
+        ctx.fillRect(
+            exit.x * cellSize + exitPadding,
+            exit.y * cellSize + exitPadding,
+            cellSize - exitPadding * 2,
+            cellSize - exitPadding * 2
+        );
+
+        ctx.shadowBlur = 0;
+
+        /*
+         * Гравець
+         */
+        const playerPadding =
+            cellSize * 0.24;
+
+        ctx.fillStyle = "#00ff41";
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = "#00ff41";
+
+        ctx.fillRect(
+            player.x * cellSize + playerPadding,
+            player.y * cellSize + playerPadding,
+            cellSize - playerPadding * 2,
+            cellSize - playerPadding * 2
+        );
+
+        ctx.shadowBlur = 0;
     }
 
 
-    /* =========================
-       РУХ ГРАВЦЯ
-    ========================== */
+    function movePlayer(dx, dy) {
+        if (!gameActive || gamePaused) return;
 
-    function movePlayer(
-        dx,
-        dy
-    ) {
-
-        if (!gameActive) {
-            return;
-        }
-
-        if (gamePaused) {
-            return;
-        }
-
-
-        const newX =
-            player.x + dx;
-
-        const newY =
-            player.y + dy;
-
-
-        if (newX < 0) {
-            return;
-        }
-
-        if (newX >= mazeSize) {
-            return;
-        }
-
-        if (newY < 0) {
-            return;
-        }
-
-        if (newY >= mazeSize) {
-            return;
-        }
-
+        const newX = player.x + dx;
+        const newY = player.y + dy;
 
         if (
-            maze[newY][newX] === 1
+            newX < 0 ||
+            newX >= maze.length ||
+            newY < 0 ||
+            newY >= maze.length
         ) {
-
             return;
         }
 
+        /*
+         * 1 = стіна
+         * 0 = прохід
+         */
+        if (maze[newY][newX] === 1) {
+            return;
+        }
 
-        player.x =
-            newX;
-
-        player.y =
-            newY;
-
+        player.x = newX;
+        player.y = newY;
 
         moves++;
 
-        movesText.innerText =
-            moves;
-
+        movesText.textContent =
+            `MOVES: ${moves}`;
 
         drawMaze();
-
 
         if (
             player.x === exit.x &&
             player.y === exit.y
         ) {
-
-            levelComplete();
+            levelCompleted();
         }
     }
 
 
-    /* =========================
-       КЛАВІАТУРА
-    ========================== */
+    function levelCompleted() {
+        gameActive = false;
 
-    window.addEventListener(
-        "keydown",
-        function (event) {
+        clearInterval(timer);
 
-            if (!gameActive) {
-                return;
-            }
+        finalLevelText.textContent =
+            `LEVEL ${currentLevel} COMPLETE`;
 
-            if (gamePaused) {
-                return;
-            }
+        finalStatsText.textContent =
+            `TIME: ${seconds}  |  MOVES: ${moves}`;
+
+        saveRecord();
+
+        /*
+         * У CAMPAIGN переходимо до наступного рівня.
+         * У RANDOM після перемоги можна створити
+         * абсолютно новий випадковий лабіринт.
+         */
+        if (
+            currentMode === "campaign" &&
+            currentLevel >= 50
+        ) {
+            finalMessageText.textContent =
+                "CAMPAIGN COMPLETE!";
+            nextButton.textContent =
+                "BACK TO MENU";
+        } else {
+            finalMessageText.textContent =
+                currentMode === "campaign"
+                    ? "LEVEL CLEARED"
+                    : "NEW MAZE READY";
+
+            nextButton.textContent =
+                currentMode === "campaign"
+                    ? "NEXT LEVEL"
+                    : "NEXT RANDOM";
+        }
+
+        gameScreen.classList.add("hidden");
+        winScreen.classList.remove("hidden");
+    }
 
 
-            const key =
-                event.key.toLowerCase();
+    function nextLevel() {
+        if (
+            currentMode === "campaign" &&
+            currentLevel >= 50
+        ) {
+            backToMenu();
+            return;
+        }
+
+        if (currentMode === "campaign") {
+            startGame(
+                currentLevel + 1,
+                "campaign"
+            );
+        } else {
+            startGame(
+                currentLevel,
+                "random"
+            );
+        }
+    }
 
 
+    function restartLevel() {
+        startGame(
+            currentLevel,
+            currentMode
+        );
+    }
+
+
+    function togglePause() {
+        if (!gameActive) return;
+
+        gamePaused = !gamePaused;
+
+        pauseButton.textContent =
+            gamePaused
+                ? "▶ RESUME"
+                : "Ⅱ PAUSE";
+
+        if (gamePaused) {
+            pauseOverlay.classList.remove("hidden");
+        } else {
+            pauseOverlay.classList.add("hidden");
+        }
+    }
+
+
+    function backToMenu() {
+        clearInterval(timer);
+
+        gameActive = false;
+        gamePaused = false;
+
+        gameScreen.classList.add("hidden");
+        winScreen.classList.add("hidden");
+        menuScreen.classList.remove("hidden");
+
+        pauseOverlay.classList.add("hidden");
+
+        pauseButton.textContent =
+            "Ⅱ PAUSE";
+    }
+
+
+    function saveRecord() {
+        const key =
+            `maze_record_${currentMode}_${currentLevel}`;
+
+        const oldRecord =
+            localStorage.getItem(key);
+
+        const newRecord = {
+            time: seconds,
+            moves: moves
+        };
+
+        if (!oldRecord) {
+            localStorage.setItem(
+                key,
+                JSON.stringify(newRecord)
+            );
+            return;
+        }
+
+        try {
+            const parsed =
+                JSON.parse(oldRecord);
+
+            /*
+             * Спочатку важливіший час.
+             * Якщо час однаковий — менше ходів.
+             */
             if (
-                key === "arrowup" ||
-                key === "w"
+                seconds < parsed.time ||
+                (
+                    seconds === parsed.time &&
+                    moves < parsed.moves
+                )
             ) {
-
-                event.preventDefault();
-
-                movePlayer(
-                    0,
-                    -1
+                localStorage.setItem(
+                    key,
+                    JSON.stringify(newRecord)
                 );
+            }
+        } catch {
+            localStorage.setItem(
+                key,
+                JSON.stringify(newRecord)
+            );
+        }
+    }
 
-            } else if (
-                key === "arrowdown" ||
-                key === "s"
-            ) {
 
-                event.preventDefault();
+    /*
+     * Клавіатура
+     */
+    document.addEventListener(
+        "keydown",
+        event => {
+            if (!gameActive) return;
 
-                movePlayer(
-                    0,
-                    1
-                );
+            switch (event.key) {
+                case "ArrowUp":
+                case "w":
+                case "W":
+                    event.preventDefault();
+                    movePlayer(0, -1);
+                    break;
 
-            } else if (
-                key === "arrowleft" ||
-                key === "a"
-            ) {
+                case "ArrowDown":
+                case "s":
+                case "S":
+                    event.preventDefault();
+                    movePlayer(0, 1);
+                    break;
 
-                event.preventDefault();
+                case "ArrowLeft":
+                case "a":
+                case "A":
+                    event.preventDefault();
+                    movePlayer(-1, 0);
+                    break;
 
-                movePlayer(
-                    -1,
-                    0
-                );
+                case "ArrowRight":
+                case "d":
+                case "D":
+                    event.preventDefault();
+                    movePlayer(1, 0);
+                    break;
 
-            } else if (
-                key === "arrowright" ||
-                key === "d"
-            ) {
-
-                event.preventDefault();
-
-                movePlayer(
-                    1,
-                    0
-                );
+                case "Escape":
+                    togglePause();
+                    break;
             }
         }
     );
 
 
-    /* =========================
-       РІВЕНЬ ПРОЙДЕНО
-    ========================== */
-
-    function levelComplete() {
-
-        gameActive =
-            false;
-
-        clearInterval(timer);
-
-        saveRecord();
-
-
-        document
-            .getElementById("winLevel")
-            .innerText =
-            currentLevel;
-
-
-        document
-            .getElementById("winMoves")
-            .innerText =
-            moves;
-
-
-        document
-            .getElementById("winTime")
-            .innerText =
-            seconds;
-
-
-        const record =
-            getRecord(
-                currentMode,
-                currentLevel
-            );
-
-
-        document
-            .getElementById("bestMoves")
-            .innerText =
-            record.moves;
-
-
-        document
-            .getElementById("bestTime")
-            .innerText =
-            record.time;
-
-
-        gameScreen.style.display =
-            "none";
-
-        winScreen.style.display =
-            "block";
-    }
-
-
-    /* =========================
-       НАСТУПНИЙ РІВЕНЬ
-    ========================== */
-
-    function nextLevel() {
-
-        currentLevel++;
-
-        startLevel();
-    }
-
-
-    /* =========================
-       RESTART
-    ========================== */
-
-    function restartLevel() {
-
-        startLevel();
-    }
-
-
-    /* =========================
-       ПАУЗА
-    ========================== */
-
-    function pauseGame() {
-
-        if (!gameActive) {
-            return;
+    /*
+     * Кнопки меню
+     */
+    campaignButton.addEventListener(
+        "click",
+        () => {
+            startGame(1, "campaign");
         }
+    );
 
 
-        gamePaused =
-            !gamePaused;
-
-
-        if (gamePaused) {
-
-            pauseButton.innerText =
-                "▶️ RESUME";
-
-            message.innerText =
-                "⏸️ ГРУ ПРИЗУПИНЕНО";
-
-        } else {
-
-            pauseButton.innerText =
-                "⏸️ PAUSE";
-
-            message.innerText =
-                "Дійди до червоної точки!";
+    randomButton.addEventListener(
+        "click",
+        () => {
+            startGame(1, "random");
         }
-    }
+    );
 
 
-    /* =========================
-       НАЗАД У МЕНЮ
-    ========================== */
-
-    function backToMenu() {
-
-        clearInterval(timer);
-
-        gameActive =
-            false;
-
-        gamePaused =
-            false;
-
-
-        gameScreen.style.display =
-            "none";
-
-        winScreen.style.display =
-            "none";
-
-        menu.style.display =
-            "block";
-    }
-
-
-    /* =========================
-       ОТРИМАТИ РЕКОРД
-    ========================== */
-
-    function getRecord(
-        mode,
-        level
-    ) {
-
-        const key =
-            "maze_record_" +
-            mode +
-            "_" +
-            level;
-
-
-        const saved =
-            localStorage.getItem(
-                key
-            );
-
-
-        if (!saved) {
-
-            return {
-                moves: "---",
-                time: "---"
-            };
+    restartButton.addEventListener(
+        "click",
+        () => {
+            restartLevel();
         }
+    );
 
 
-        try {
-
-            return JSON.parse(
-                saved
-            );
-
-        } catch (error) {
-
-            return {
-                moves: "---",
-                time: "---"
-            };
+    pauseButton.addEventListener(
+        "click",
+        () => {
+            togglePause();
         }
-    }
+    );
 
 
-    /* =========================
-       ЗБЕРЕГТИ РЕКОРД
-    ========================== */
-
-    function saveRecord() {
-
-        const oldRecord =
-            getRecord(
-                currentMode,
-                currentLevel
-            );
-
-
-        let bestMoves =
-            moves;
-
-        let bestTime =
-            seconds;
-
-
-        if (
-            oldRecord.moves !== "---"
-        ) {
-
-            bestMoves =
-                Math.min(
-                    moves,
-                    Number(
-                        oldRecord.moves
-                    )
-                );
+    nextButton.addEventListener(
+        "click",
+        () => {
+            nextLevel();
         }
+    );
 
 
-        if (
-            oldRecord.time !== "---"
-        ) {
-
-            bestTime =
-                Math.min(
-                    seconds,
-                    Number(
-                        oldRecord.time
-                    )
-                );
+    menuButton.addEventListener(
+        "click",
+        () => {
+            backToMenu();
         }
+    );
 
 
-        const key =
-            "maze_record_" +
-            currentMode +
-            "_" +
-            currentLevel;
+    /*
+     * Мобільні кнопки
+     */
+    upButton.addEventListener(
+        "click",
+        () => movePlayer(0, -1)
+    );
+
+    downButton.addEventListener(
+        "click",
+        () => movePlayer(0, 1)
+    );
+
+    leftButton.addEventListener(
+        "click",
+        () => movePlayer(-1, 0)
+    );
+
+    rightButton.addEventListener(
+        "click",
+        () => movePlayer(1, 0)
+    );
 
 
-        localStorage.setItem(
-            key,
-
-            JSON.stringify({
-                moves: bestMoves,
-                time: bestTime
-            })
+    /*
+     * Не даємо мобільному браузеру
+     * випадково прокручувати сторінку
+     * під час натискання кнопок.
+     */
+    [
+        upButton,
+        downButton,
+        leftButton,
+        rightButton
+    ].forEach(button => {
+        button.addEventListener(
+            "touchstart",
+            event => {
+                event.preventDefault();
+            },
+            { passive: false }
         );
-    }
+    });
 
+
+    window.addEventListener(
+        "resize",
+        () => {
+            if (gameActive) {
+                resizeCanvas();
+                drawMaze();
+            }
+        }
+    );
 </script>
 
 </body>
