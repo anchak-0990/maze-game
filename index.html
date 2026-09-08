@@ -320,6 +320,10 @@ canvas {
                 CAMPAIGN
             </span>
 
+            <span id="difficultyText" class="stat">
+                DIFFICULTY: EASY
+            </span>
+
             <span id="movesText" class="stat">
                 MOVES: 0
             </span>
@@ -489,6 +493,9 @@ const levelText =
 const modeText =
     document.getElementById("modeText");
 
+const difficultyText =
+    document.getElementById("difficultyText");
+
 const movesText =
     document.getElementById("movesText");
 
@@ -573,6 +580,43 @@ function getMazeSize(level) {
 /* =========================================================
    DIFFICULTY
    ========================================================= */
+
+function getDifficultyName(level) {
+
+    if (level <= 3) {
+        return "EASY";
+    }
+
+    if (level <= 6) {
+        return "NORMAL";
+    }
+
+    if (level <= 10) {
+        return "MEDIUM";
+    }
+
+    if (level <= 15) {
+        return "HARD";
+    }
+
+    if (level <= 20) {
+        return "VERY HARD";
+    }
+
+    if (level <= 25) {
+        return "EXTREME";
+    }
+
+    if (level <= 30) {
+        return "NIGHTMARE";
+    }
+
+    if (level <= 35) {
+        return "INSANE";
+    }
+
+    return "IMPOSSIBLE";
+}
 
 function getDifficulty(level) {
 
