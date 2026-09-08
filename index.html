@@ -51,11 +51,16 @@
             font-size: 16px;
             margin: 6px;
             transition: 0.2s;
+            touch-action: manipulation;
         }
 
         button:hover {
             background: #003311;
             box-shadow: 0 0 12px rgba(0, 255, 65, 0.5);
+        }
+
+        button:active {
+            background: #00551c;
         }
 
         .menu-button {
@@ -106,6 +111,7 @@
             height: min(80vw, 650px);
             max-width: 80vh;
             max-height: 80vh;
+            user-select: none;
         }
 
         .cell {
@@ -172,10 +178,6 @@
             line-height: 1.8;
         }
 
-        .danger {
-            color: #ff3333;
-        }
-
         @media (max-width: 600px) {
             h1 {
                 font-size: 32px;
@@ -201,6 +203,10 @@
 <body>
 
 <div id="game">
+
+    <!-- =========================
+         ГОЛОВНЕ МЕНЮ
+    ========================== -->
 
     <div id="menu">
 
@@ -228,6 +234,10 @@
     </div>
 
 
+    <!-- =========================
+         ЕКРАН ГРИ
+    ========================== -->
+
     <div id="gameScreen">
 
         <h1>🧩 MAZE</h1>
@@ -235,57 +245,92 @@
         <div id="hud">
 
             <div class="hud-item">
-                MODE: <span id="modeText">---</span>
+                MODE:
+                <span id="modeText">---</span>
             </div>
 
             <div class="hud-item">
-                LEVEL: <span id="levelText">1</span>
+                LEVEL:
+                <span id="levelText">1</span>
             </div>
 
             <div class="hud-item">
-                SIZE: <span id="sizeText">9x9</span>
+                SIZE:
+                <span id="sizeText">9x9</span>
             </div>
 
             <div class="hud-item">
-                MOVES: <span id="movesText">0</span>
+                MOVES:
+                <span id="movesText">0</span>
             </div>
 
             <div class="hud-item">
-                TIME: <span id="timeText">0</span>s
+                TIME:
+                <span id="timeText">0</span>s
             </div>
 
         </div>
+
 
         <div id="mazeWrapper">
             <div id="maze"></div>
         </div>
 
+
         <div id="message">
             Дійди до червоної точки!
         </div>
 
+
         <div>
-            <button id="restartButton">🔄 RESTART</button>
-            <button id="pauseButton">⏸️ PAUSE</button>
-            <button id="menuButton">🏠 MENU</button>
+            <button id="restartButton">
+                🔄 RESTART
+            </button>
+
+            <button id="pauseButton">
+                ⏸️ PAUSE
+            </button>
+
+            <button id="menuButton">
+                🏠 MENU
+            </button>
         </div>
+
+
+        <!-- СЕНСОРНЕ КЕРУВАННЯ -->
 
         <div id="controls">
 
             <div class="control-row">
-                <button class="control-button" id="upButton">⬆️</button>
+                <button class="control-button" id="upButton">
+                    ⬆️
+                </button>
             </div>
 
             <div class="control-row">
-                <button class="control-button" id="leftButton">⬅️</button>
-                <button class="control-button" id="downButton">⬇️</button>
-                <button class="control-button" id="rightButton">➡️</button>
+
+                <button class="control-button" id="leftButton">
+                    ⬅️
+                </button>
+
+                <button class="control-button" id="downButton">
+                    ⬇️
+                </button>
+
+                <button class="control-button" id="rightButton">
+                    ➡️
+                </button>
+
             </div>
 
         </div>
 
     </div>
 
+
+    <!-- =========================
+         ЕКРАН ПЕРЕМОГИ
+    ========================== -->
 
     <div id="winScreen">
 
@@ -297,24 +342,29 @@
 
             LEVEL:
             <span id="winLevel">1</span>
+
             <br>
 
             MOVES:
             <span id="winMoves">0</span>
+
             <br>
 
             TIME:
             <span id="winTime">0</span>s
+
             <br>
 
             BEST MOVES:
             <span id="bestMoves">---</span>
+
             <br>
 
             BEST TIME:
             <span id="bestTime">---</span>s
 
         </div>
+
 
         <button id="nextLevelButton">
             ▶️ NEXT LEVEL
@@ -333,7 +383,7 @@
 
     /* =========================
        НАЛАШТУВАННЯ
-    ========================= */
+    ========================== */
 
     const MIN_SIZE = 9;
     const MAX_SIZE = 25;
@@ -361,133 +411,151 @@
     let gamePaused = false;
     let gameActive = false;
 
+    /*
+        У Campaign зберігаємо seed
+        кожного рівня.
 
-    /* =========================
-       ЕЛЕМЕНТИ
-    ========================= */
+        Тому Level 1 завжди однаковий,
+        Level 2 завжди однаковий і т.д.
+    */
 
-    const menu = document.getElementById("menu");
-    const gameScreen = document.getElementById("gameScreen");
-    const winScreen = document.getElementById("winScreen");
-
-    const mazeContainer = document.getElementById("maze");
-
-    const modeText = document.getElementById("modeText");
-    const levelText = document.getElementById("levelText");
-    const sizeText = document.getElementById("sizeText");
-    const movesText = document.getElementById("movesText");
-    const timeText = document.getElementById("timeText");
-    const message = document.getElementById("message");
-
-    const pauseButton = document.getElementById("pauseButton");
-
-    const campaignButton =
-        document.getElementById("campaignButton");
-
-    const randomButton =
-        document.getElementById("randomButton");
-
-    const restartButton =
-        document.getElementById("restartButton");
-
-    const menuButton =
-        document.getElementById("menuButton");
-
-    const nextLevelButton =
-        document.getElementById("nextLevelButton");
-
-    const winMenuButton =
-        document.getElementById("winMenuButton");
-
-    const upButton =
-        document.getElementById("upButton");
-
-    const downButton =
-        document.getElementById("downButton");
-
-    const leftButton =
-        document.getElementById("leftButton");
-
-    const rightButton =
-        document.getElementById("rightButton");
+    let currentSeed = 0;
 
 
     /* =========================
-       КНОПКИ МЕНЮ
-    ========================= */
+       HTML ЕЛЕМЕНТИ
+    ========================== */
 
-    campaignButton.addEventListener(
-        "click",
-        startCampaign
-    );
+    const menu =
+        document.getElementById("menu");
 
-    randomButton.addEventListener(
-        "click",
-        startRandom
-    );
+    const gameScreen =
+        document.getElementById("gameScreen");
 
-    restartButton.addEventListener(
-        "click",
-        restartLevel
-    );
+    const winScreen =
+        document.getElementById("winScreen");
+
+    const mazeContainer =
+        document.getElementById("maze");
+
+    const modeText =
+        document.getElementById("modeText");
+
+    const levelText =
+        document.getElementById("levelText");
+
+    const sizeText =
+        document.getElementById("sizeText");
+
+    const movesText =
+        document.getElementById("movesText");
+
+    const timeText =
+        document.getElementById("timeText");
+
+    const message =
+        document.getElementById("message");
+
+    const pauseButton =
+        document.getElementById("pauseButton");
+
+
+    /* =========================
+       КНОПКИ
+    ========================== */
+
+    document
+        .getElementById("campaignButton")
+        .addEventListener(
+            "click",
+            startCampaign
+        );
+
+    document
+        .getElementById("randomButton")
+        .addEventListener(
+            "click",
+            startRandom
+        );
+
+    document
+        .getElementById("restartButton")
+        .addEventListener(
+            "click",
+            restartLevel
+        );
 
     pauseButton.addEventListener(
         "click",
         pauseGame
     );
 
-    menuButton.addEventListener(
-        "click",
-        backToMenu
-    );
+    document
+        .getElementById("menuButton")
+        .addEventListener(
+            "click",
+            backToMenu
+        );
 
-    nextLevelButton.addEventListener(
-        "click",
-        nextLevel
-    );
+    document
+        .getElementById("nextLevelButton")
+        .addEventListener(
+            "click",
+            nextLevel
+        );
 
-    winMenuButton.addEventListener(
-        "click",
-        backToMenu
-    );
-
-
-    /* =========================
-       СЕНСОРНЕ КЕРУВАННЯ
-    ========================= */
-
-    upButton.addEventListener(
-        "click",
-        function () {
-            movePlayer(0, -1);
-        }
-    );
-
-    downButton.addEventListener(
-        "click",
-        function () {
-            movePlayer(0, 1);
-        }
-    );
-
-    leftButton.addEventListener(
-        "click",
-        function () {
-            movePlayer(-1, 0);
-        }
-    );
-
-    rightButton.addEventListener(
-        "click",
-        function () {
-            movePlayer(1, 0);
-        }
-    );
+    document
+        .getElementById("winMenuButton")
+        .addEventListener(
+            "click",
+            backToMenu
+        );
 
 
     /* =========================
-       РОЗМІР РІВНЯ
-    ========================= */
+       СЕНСОРНІ КНОПКИ
+    ========================== */
+
+    document
+        .getElementById("upButton")
+        .addEventListener(
+            "click",
+            function () {
+                movePlayer(0, -1);
+            }
+        );
+
+    document
+        .getElementById("downButton")
+        .addEventListener(
+            "click",
+            function () {
+                movePlayer(0, 1);
+            }
+        );
+
+    document
+        .getElementById("leftButton")
+        .addEventListener(
+            "click",
+            function () {
+                movePlayer(-1, 0);
+            }
+        );
+
+    document
+        .getElementById("rightButton")
+        .addEventListener(
+            "click",
+            function () {
+                movePlayer(1, 0);
+            }
+        );
+
+
+    /* =========================
+       РОЗМІР ЛАБІРИНТУ
+    ========================== */
 
     function getMazeSize(level) {
 
@@ -528,21 +596,105 @@
 
 
     /* =========================
-       ГЕНЕРАТОР ЛАБІРИНТУ
-    ========================= */
+       SEED RANDOM
+    ========================== */
 
-    function generateMaze(size) {
+    function createSeedRandom(seed) {
+
+        let value = seed >>> 0;
+
+        return function () {
+
+            value += 0x6D2B79F5;
+
+            let t = value;
+
+            t =
+                Math.imul(
+                    t ^ (t >>> 15),
+                    t | 1
+                );
+
+            t ^=
+                t +
+                Math.imul(
+                    t ^ (t >>> 7),
+                    t | 61
+                );
+
+            return (
+                (t ^ (t >>> 14)) >>> 0
+            ) / 4294967296;
+        };
+    }
+
+
+    /* =========================
+       SHUFFLE
+    ========================== */
+
+    function shuffleDirections(
+        directions,
+        random
+    ) {
+
+        for (
+            let i = directions.length - 1;
+            i > 0;
+            i--
+        ) {
+
+            const j =
+                Math.floor(
+                    random() * (i + 1)
+                );
+
+            const temp =
+                directions[i];
+
+            directions[i] =
+                directions[j];
+
+            directions[j] =
+                temp;
+        }
+
+        return directions;
+    }
+
+
+    /* =========================
+       ГЕНЕРАЦІЯ ЛАБІРИНТУ
+    ========================== */
+
+    function generateMaze(
+        size,
+        seed
+    ) {
 
         const grid = [];
 
-        for (let y = 0; y < size; y++) {
+        for (
+            let y = 0;
+            y < size;
+            y++
+        ) {
 
             grid[y] = [];
 
-            for (let x = 0; x < size; x++) {
+            for (
+                let x = 0;
+                x < size;
+                x++
+            ) {
+
                 grid[y][x] = 1;
             }
         }
+
+
+        const random =
+            createSeedRandom(seed);
 
 
         const stack = [];
@@ -561,19 +713,31 @@
                 stack[stack.length - 1];
 
 
-            const directions = [
-                { dx: 2, dy: 0 },
-                { dx: -2, dy: 0 },
-                { dx: 0, dy: 2 },
-                { dx: 0, dy: -2 }
+            let directions = [
+                {
+                    dx: 2,
+                    dy: 0
+                },
+                {
+                    dx: -2,
+                    dy: 0
+                },
+                {
+                    dx: 0,
+                    dy: 2
+                },
+                {
+                    dx: 0,
+                    dy: -2
+                }
             ];
 
 
-            directions.sort(
-                function () {
-                    return Math.random() - 0.5;
-                }
-            );
+            directions =
+                shuffleDirections(
+                    directions,
+                    random
+                );
 
 
             let moved = false;
@@ -588,11 +752,14 @@
                 const direction =
                     directions[i];
 
+
                 const nx =
-                    current.x + direction.dx;
+                    current.x +
+                    direction.dx;
 
                 const ny =
-                    current.y + direction.dy;
+                    current.y +
+                    direction.dy;
 
 
                 if (nx < 0) {
@@ -625,9 +792,11 @@
                     direction.dy / 2;
 
 
-                grid[middleY][middleX] = 0;
+                grid[middleY][middleX] =
+                    0;
 
-                grid[ny][nx] = 0;
+                grid[ny][nx] =
+                    0;
 
 
                 stack.push({
@@ -649,21 +818,27 @@
 
 
         /*
-            Робимо EXIT гарантовано
-            доступним із лабіринту.
-
-            Оскільки розмір непарний,
-            остання клітинка має ту саму
-            структуру, що й старт.
+            Робимо нижній правий кут
+            гарантовано доступним.
         */
 
-        const exitX = size - 1;
-        const exitY = size - 1;
+        const exitX =
+            size - 1;
 
-        grid[exitY][exitX] = 0;
+        const exitY =
+            size - 1;
 
-        grid[exitY][exitX - 1] = 0;
-        grid[exitY - 1][exitX] = 0;
+
+        grid[exitY][exitX] =
+            0;
+
+
+        grid[exitY][exitX - 1] =
+            0;
+
+
+        grid[exitY - 1][exitX] =
+            0;
 
 
         return grid;
@@ -671,14 +846,49 @@
 
 
     /* =========================
+       SEED ДЛЯ CAMPAIGN
+    ========================== */
+
+    function getCampaignSeed(level) {
+
+        /*
+            Число залежить тільки від номера
+            рівня.
+
+            Отже один рівень завжди
+            отримує той самий лабіринт.
+        */
+
+        return (
+            918273 +
+            level * 7919
+        );
+    }
+
+
+    /* =========================
+       SEED ДЛЯ RANDOM
+    ========================== */
+
+    function getRandomSeed() {
+
+        return Math.floor(
+            Math.random() * 2147483647
+        );
+    }
+
+
+    /* =========================
        CAMPAIGN
-    ========================= */
+    ========================== */
 
     function startCampaign() {
 
-        currentMode = "campaign";
+        currentMode =
+            "campaign";
 
-        currentLevel = 1;
+        currentLevel =
+            1;
 
         startLevel();
     }
@@ -686,39 +896,70 @@
 
     /* =========================
        RANDOM
-    ========================= */
+    ========================== */
 
     function startRandom() {
 
-        currentMode = "random";
+        currentMode =
+            "random";
 
-        currentLevel = 1;
+        currentLevel =
+            1;
 
         startLevel();
     }
 
 
     /* =========================
-       НОВИЙ РІВЕНЬ
-    ========================= */
+       ЗАПУСК РІВНЯ
+    ========================== */
 
     function startLevel() {
 
         clearInterval(timer);
 
-        gamePaused = false;
-        gameActive = true;
 
-        moves = 0;
-        seconds = 0;
+        gamePaused =
+            false;
+
+        gameActive =
+            true;
+
+
+        moves =
+            0;
+
+        seconds =
+            0;
 
 
         mazeSize =
-            getMazeSize(currentLevel);
+            getMazeSize(
+                currentLevel
+            );
+
+
+        if (
+            currentMode === "campaign"
+        ) {
+
+            currentSeed =
+                getCampaignSeed(
+                    currentLevel
+                );
+
+        } else {
+
+            currentSeed =
+                getRandomSeed();
+        }
 
 
         maze =
-            generateMaze(mazeSize);
+            generateMaze(
+                mazeSize,
+                currentSeed
+            );
 
 
         player = {
@@ -733,21 +974,33 @@
         };
 
 
-        if (currentMode === "campaign") {
-            modeText.innerText = "CAMPAIGN";
+        if (
+            currentMode === "campaign"
+        ) {
+
+            modeText.innerText =
+                "CAMPAIGN";
+
         } else {
-            modeText.innerText = "RANDOM";
+
+            modeText.innerText =
+                "RANDOM";
         }
 
 
         levelText.innerText =
             currentLevel;
 
+
         sizeText.innerText =
-            mazeSize + "x" + mazeSize;
+            mazeSize +
+            "x" +
+            mazeSize;
+
 
         movesText.innerText =
             moves;
+
 
         timeText.innerText =
             seconds;
@@ -761,53 +1014,62 @@
             "⏸️ PAUSE";
 
 
-        menu.style.display = "none";
+        menu.style.display =
+            "none";
 
-        winScreen.style.display = "none";
+        winScreen.style.display =
+            "none";
 
-        gameScreen.style.display = "block";
+        gameScreen.style.display =
+            "block";
 
 
         drawMaze();
 
 
-        timer = setInterval(
-            function () {
+        timer =
+            setInterval(
+                function () {
 
-                if (gamePaused) {
-                    return;
-                }
+                    if (!gameActive) {
+                        return;
+                    }
 
-                if (!gameActive) {
-                    return;
-                }
+                    if (gamePaused) {
+                        return;
+                    }
 
-                seconds++;
+                    seconds++;
 
-                timeText.innerText =
-                    seconds;
+                    timeText.innerText =
+                        seconds;
 
-            },
-            1000
-        );
+                },
+                1000
+            );
     }
 
 
     /* =========================
        МАЛЮВАННЯ
-    ========================= */
+    ========================== */
 
     function drawMaze() {
 
-        mazeContainer.innerHTML = "";
+        mazeContainer.innerHTML =
+            "";
 
 
         mazeContainer.style.gridTemplateColumns =
-            "repeat(" + mazeSize + ", 1fr)";
+            "repeat(" +
+            mazeSize +
+            ", 1fr)";
 
 
         mazeContainer.style.gridTemplateRows =
-            "repeat(" + mazeSize + ", 1fr)";
+            "repeat(" +
+            mazeSize +
+            ", 1fr)";
 
 
         for (
@@ -823,263 +1085,18 @@
             ) {
 
                 const cell =
-                    document.createElement("div");
+                    document.createElement(
+                        "div"
+                    );
 
 
-                cell.className = "cell";
-
-
-                if (maze[y][x] === 1) {
-                    cell.classList.add("wall");
-                }
-
-
-                if (
-                    x === exit.x &&
-                    y === exit.y
-                ) {
-                    cell.classList.add("exit");
-                }
+                cell.className =
+                    "cell";
 
 
                 if (
-                    x === player.x &&
-                    y === player.y
+                    maze[y][x] === 1
                 ) {
-                    cell.classList.add("player");
-                }
 
-
-                mazeContainer.appendChild(cell);
-            }
-        }
-    }
-
-
-    /* =========================
-       РУХ ГРАВЦЯ
-    ========================= */
-
-    function movePlayer(dx, dy) {
-
-        if (!gameActive) {
-            return;
-        }
-
-        if (gamePaused) {
-            return;
-        }
-
-
-        const newX =
-            player.x + dx;
-
-        const newY =
-            player.y + dy;
-
-
-        if (newX < 0) {
-            return;
-        }
-
-        if (newX >= mazeSize) {
-            return;
-        }
-
-        if (newY < 0) {
-            return;
-        }
-
-        if (newY >= mazeSize) {
-            return;
-        }
-
-
-        if (maze[newY][newX] === 1) {
-            return;
-        }
-
-
-        player.x = newX;
-        player.y = newY;
-
-
-        moves++;
-
-        movesText.innerText =
-            moves;
-
-
-        drawMaze();
-
-
-        if (
-            player.x === exit.x &&
-            player.y === exit.y
-        ) {
-
-            levelComplete();
-        }
-    }
-
-
-    /* =========================
-       КЛАВІАТУРА
-    ========================= */
-
-    window.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (!gameActive) {
-                return;
-            }
-
-            if (gamePaused) {
-                return;
-            }
-
-
-            const key =
-                event.key.toLowerCase();
-
-
-            switch (key) {
-
-                case "arrowup":
-                case "w":
-
-                    event.preventDefault();
-
-                    movePlayer(0, -1);
-
-                    break;
-
-
-                case "arrowdown":
-                case "s":
-
-                    event.preventDefault();
-
-                    movePlayer(0, 1);
-
-                    break;
-
-
-                case "arrowleft":
-                case "a":
-
-                    event.preventDefault();
-
-                    movePlayer(-1, 0);
-
-                    break;
-
-
-                case "arrowright":
-                case "d":
-
-                    event.preventDefault();
-
-                    movePlayer(1, 0);
-
-                    break;
-            }
-
-        }
-    );
-
-
-    /* =========================
-       ПЕРЕМОГА
-    ========================= */
-
-    function levelComplete() {
-
-        gameActive = false;
-
-        clearInterval(timer);
-
-
-        saveRecord();
-
-
-        document.getElementById(
-            "winLevel"
-        ).innerText = currentLevel;
-
-
-        document.getElementById(
-            "winMoves"
-        ).innerText = moves;
-
-
-        document.getElementById(
-            "winTime"
-        ).innerText = seconds;
-
-
-        const record =
-            getRecord(currentLevel);
-
-
-        document.getElementById(
-            "bestMoves"
-        ).innerText =
-            record.moves;
-
-
-        document.getElementById(
-            "bestTime"
-        ).innerText =
-            record.time;
-
-
-        gameScreen.style.display =
-            "none";
-
-        winScreen.style.display =
-            "block";
-    }
-
-
-    /* =========================
-       НАСТУПНИЙ РІВЕНЬ
-    ========================= */
-
-    function nextLevel() {
-
-        currentLevel++;
-
-        startLevel();
-    }
-
-
-    /* =========================
-       RESTART
-    ========================= */
-
-    function restartLevel() {
-
-        startLevel();
-    }
-
-
-    /* =========================
-       PAUSE
-    ========================= */
-
-    function pauseGame() {
-
-        if (!gameActive) {
-            return;
-        }
-
-
-        gamePaused =
-            !gamePaused;
-
-
-        if (gamePaused) {
-
-            p
+                    cell.classList.add(
+                      
