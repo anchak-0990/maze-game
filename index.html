@@ -1117,6 +1117,17 @@ function generateMaze(
    START GAME
    ========================================================= */
 
+function updateMenuStats() {
+
+    totalCompletedText.textContent =
+        "LEVELS COMPLETED: " + totalCompleted;
+
+    campaignProgressText.textContent =
+        "CAMPAIGN: " +
+        campaignProgress +
+        " / 50";
+}
+
 function startGame(
     level,
     mode
@@ -1515,6 +1526,35 @@ function completeLevel() {
 
     gameActive = false;
 
+    if (currentMode === "campaign") {
+
+        if (currentLevel > campaignProgress) {
+
+            campaignProgress = currentLevel;
+
+            localStorage.setItem(
+                "maze_campaign_progress",
+                campaignProgress
+            );
+
+            totalCompleted++;
+
+            localStorage.setItem(
+                "maze_total_completed",
+                totalCompleted
+            );
+        }
+
+    } else {
+
+        totalCompleted++;
+
+        localStorage.setItem(
+            "maze_total_completed",
+            totalCompleted
+        );
+    }
+
     clearInterval(timer);
 
 
@@ -1821,8 +1861,11 @@ document.addEventListener(
 campaignButton.onclick =
     function() {
 
+        const nextLevel =
+            campaignProgress + 1;
+
         startGame(
-            1,
+            nextLevel,
             "campaign"
         );
     };
@@ -1935,6 +1978,8 @@ window.addEventListener(
         }
     }
 );
+
+updateMenuStats();
 
 </script>
 
