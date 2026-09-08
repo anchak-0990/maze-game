@@ -278,11 +278,25 @@ canvas {
         ⚡ RANDOM
     </button>
 
-    <div class="info">
-        CAMPAIGN — пройти всі рівні по порядку.<br>
-        RANDOM — новий випадковий лабіринт.<br><br>
-        Стрілки / WASD або кнопки на екрані.
+<div class="info">
+
+    <div id="totalCompletedText">
+        LEVELS COMPLETED: 0
     </div>
+
+    <br>
+
+    <div id="campaignProgressText">
+        CAMPAIGN: 0 / 50
+    </div>
+
+    <br>
+
+    CAMPAIGN — пройти всі рівні по порядку.<br>
+    RANDOM — випадковий лабіринт і випадкова складність.<br><br>
+    Стрілки / WASD або кнопки на екрані.
+
+</div>
 
 </section>
 
@@ -517,6 +531,12 @@ let timer = null;
 
 let gameActive = false;
 let gamePaused = false;
+
+let campaignProgress =
+    Number(localStorage.getItem("maze_campaign_progress")) || 0;
+
+let totalCompleted =
+    Number(localStorage.getItem("maze_total_completed")) || 0;
 
 
 /* =========================================================
